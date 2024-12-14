@@ -1,105 +1,106 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Authentication {
+    private static final Color HEADER_COLOR = new Color(30, 40, 50);
+    private static final Color BUTTON_COLOR = new Color(52, 152, 219);
+    private static final Color SIGNUP_BUTTON_COLOR = new Color(39, 174, 96);
+    private static final Font BUTTON_FONT = new Font("Arial", Font.PLAIN, 14);
+    private static final Font HEADER_FONT = new Font("Arial", Font.BOLD, 13);
 
-    private ArrayList<ArrayList<String>> accounts;
+    private Map<String, UserAccount> accounts;
     private JFrame sign;
 
     public Authentication() {
-        accounts = new ArrayList<>();
-        initializeUI();
-    }
-
-    private void initializeUI() {
+        accounts = new HashMap<>();
         sign = new JFrame();
-        sign.setSize(480, 320);
+        sign.setSize(384, 288);
         sign.setLayout(null);
         sign.setUndecorated(true);
         sign.setLocationRelativeTo(null);
         sign.setResizable(false);
         sign.setShape(new RoundRectangle2D.Double(0, 0, sign.getWidth(), sign.getHeight(), 30, 30));
 
-        addHeader();
-        addCenterPanel();
+        JPanel header = createHeaderPanel();
+        JPanel center = createCenterPanel();
 
+        sign.add(header);
+        sign.add(center);
         sign.setVisible(true);
     }
 
-    private void addHeader() {
+    private JPanel createHeaderPanel() {
         JPanel header = new JPanel(null);
-        header.setBackground(new Color(30, 40, 50));
-        header.setBounds(0, 0, 480, 30);
-
-        JButton exit = createButton("X", new Font("MV Boli", Font.PLAIN, 13), Color.WHITE, header.getBackground());
-        exit.setBounds(437, 0, 43, 30);
-        exit.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                exit.setBackground(new Color(255, 69, 58));
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                exit.setBackground(header.getBackground());
-            }
-        });
-        exit.addActionListener(_ -> System.exit(0));
-
+        header.setBackground(HEADER_COLOR);
+        JButton exit = createButton("X", HEADER_FONT, Color.WHITE, HEADER_COLOR);
+        exit.setBounds(sign.getWidth() - exit.getPreferredSize().width, 0, exit.getPreferredSize().width, exit.getPreferredSize().height);
+        exit.addActionListener(e -> System.exit(0));
         header.add(exit);
-        sign.add(header);
+        header.setBounds(0, 0, sign.getWidth(), exit.getPreferredSize().height);
+        return header;
     }
 
-    private void addCenterPanel() {
+    private JPanel createCenterPanel() {
         JPanel center = new JPanel(null);
         center.setBackground(new Color(53, 63, 74));
-        center.setBounds(0, 30, 480, 290);
+        center.setBounds(0, 26, sign.getWidth(), sign.getHeight() - 26);
 
-        JLabel usernameLabel = createLabel("Username", new Font("Arial", Font.PLAIN, 14), Color.WHITE);
-        usernameLabel.setBounds(110, 60, 100, 20);
+        JLabel usernameLabel = createLabel("Username", 65, 60);
+        JTextField usernameField = createTextField(center.getBackground(), 149, 53);
+        JLabel passwordLabel = createLabel("Password", 69, 110);
+        JPasswordField passwordField = createPasswordField(center.getBackground(), 149, 103);
+
+        String[] roles = {"Doctor", "Nurse"};
+        JComboBox<String> roleComboBox = new JComboBox<>(roles);
+        roleComboBox.setBounds(159, 160, 66, 25);
+        center.add(roleComboBox);
+
+        JButton loginButton = createButton("Login", BUTTON_FONT, Color.WHITE, BUTTON_COLOR);
+        loginButton.setBounds(106, 210, 69, 27);
+        loginButton.addActionListener(e -> handleLogin(usernameField, passwordField, roleComboBox));
+        center.add(loginButton);
+
+        JButton signupButton = createButton("Sign Up", BUTTON_FONT, Color.WHITE, SIGNUP_BUTTON_COLOR);
+        signupButton.setBounds(195, 210, 83, 27);
+        signupButton.addActionListener(e -> handleSignup(usernameField, passwordField, roleComboBox));
+        center.add(signupButton);
+
         center.add(usernameLabel);
-
-        JTextField usernameField = createTextField(center.getBackground());
-        usernameField.setBounds(200, 55, 200, 30);
         center.add(usernameField);
-
-        JLabel passwordLabel = createLabel("Password", new Font("Arial", Font.PLAIN, 14), Color.WHITE);
-        passwordLabel.setBounds(110, 110, 100, 20);
         center.add(passwordLabel);
-
-        JPasswordField passwordField = new JPasswordField();
-        passwordField.setForeground(new Color(200, 200, 200));
-        passwordField.setBackground(center.getBackground());
-        passwordField.setHorizontalAlignment(JTextField.CENTER);
-        passwordField.setBounds(200, 105, 200, 30);
         center.add(passwordField);
 
-        addLoginButton(usernameField, passwordField, center);
-        addSignupButton(usernameField, passwordField, center);
-
-        sign.add(center);
+        return center;
     }
 
-    private void addLoginButton(JTextField usernameField, JPasswordField passwordField, JPanel center) {
-        JButton loginButton = createButton("Login", new Font("Arial", Font.PLAIN, 14), Color.WHITE,
-                new Color(52, 152, 219));
-        loginButton.setBounds(160, 170, 80, 35);
-        loginButton.addActionListener(_ -> handleLogin(usernameField, passwordField));
-
-        center.add(loginButton);
+    private JLabel createLabel(String text, int x, int y) {
+        JLabel label = new JLabel(text);
+        label.setForeground(Color.WHITE);
+        label.setFont(new Font("Arial", Font.PLAIN, 14));
+        label.setBounds(x, y, 64, 17);
+        return label;
     }
 
-    private void addSignupButton(JTextField usernameField, JPasswordField passwordField, JPanel center) {
-        JButton signupButton = createButton("Sign Up", new Font("Arial", Font.PLAIN, 14), Color.WHITE,
-                new Color(39, 174, 96));
-        signupButton.setBounds(260, 170, 100, 35);
-        signupButton.addActionListener(_ -> handleSignup(usernameField, passwordField));
+    private JTextField createTextField(Color background, int x, int y) {
+        JTextField textField = new JTextField();
+        textField.setForeground(new Color(200, 200, 200));
+        textField.setBackground(background);
+        textField.setHorizontalAlignment(JTextField.CENTER);
+        textField.setFont(new Font("Arial", Font.PLAIN, 14));
+        textField.setBounds(x, y, 170, 30);
+        return textField;
+    }
 
-        center.add(signupButton);
+    private JPasswordField createPasswordField(Color background, int x, int y) {
+        JPasswordField passwordField = new JPasswordField();
+        passwordField.setForeground(new Color(200, 200, 200));
+        passwordField.setBackground(background);
+        passwordField.setHorizontalAlignment(JTextField.CENTER);
+        passwordField.setBounds(x, y, 170, 30);
+        return passwordField;
     }
 
     private JButton createButton(String text, Font font, Color textColor, Color backgroundColor) {
@@ -114,46 +115,26 @@ public class Authentication {
         return button;
     }
 
-    private JLabel createLabel(String text, Font font, Color textColor) {
-        JLabel label = new JLabel(text);
-        label.setForeground(textColor);
-        label.setFont(font);
-        return label;
-    }
+    private void handleLogin(JTextField usernameField, JPasswordField passwordField, JComboBox<String> roleComboBox) {
+        String username = usernameField.getText();
+        String password = new String(passwordField.getPassword());
+        String selectedRole = (String) roleComboBox.getSelectedItem();
 
-    private JTextField createTextField(Color background) {
-        JTextField textField = new JTextField();
-        textField.setForeground(new Color(200, 200, 200));
-        textField.setBackground(background);
-        textField.setHorizontalAlignment(JTextField.CENTER);
-        textField.setFont(new Font("Arial", Font.PLAIN, 14));
-        return textField;
-    }
-
-    private void handleLogin(JTextField usernameField, JPasswordField passwordField) {
-        if (usernameField.getText().isEmpty() || passwordField.getPassword().length == 0) {
-            JOptionPane.showMessageDialog(sign, "Username and password cannot be empty!", "Error",
-                    JOptionPane.ERROR_MESSAGE);
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(sign, "Username and password cannot be empty!", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        if (accounts.isEmpty()) {
-            JOptionPane.showMessageDialog(sign, "No accounts available! Please sign up first.", "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        boolean found = false;
-        for (ArrayList<String> account : accounts) {
-            if (usernameField.getText().equals(account.get(0))
-                    && new String(passwordField.getPassword()).equals(account.get(1))) {
+        UserAccount account = accounts.get(username);
+        if (account != null && account.getPassword().equals(password)) {
+            // Check if the role matches
+            if (account.getRole().equals(selectedRole)) {
                 sign.setVisible(false);
-                found = true;
-                break;
+                JOptionPane.showMessageDialog(sign, "Login successful as " + account.getRole(), "Success", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(sign, "Role mismatch. You cannot log in as " + selectedRole, "Error", JOptionPane.ERROR_MESSAGE);
             }
-        }
-
-        if (!found) {
+        } else {
             JOptionPane.showMessageDialog(sign, "Invalid username or password!", "Error", JOptionPane.ERROR_MESSAGE);
         }
 
@@ -161,29 +142,51 @@ public class Authentication {
         passwordField.setText(null);
     }
 
-    private void handleSignup(JTextField usernameField, JPasswordField passwordField) {
-        String newUsername = usernameField.getText();
-        char[] newPassword = passwordField.getPassword();
+    private void handleSignup(JTextField usernameField, JPasswordField passwordField, JComboBox<String> roleComboBox) {
+        String username = usernameField.getText();
+        String password = new String(passwordField.getPassword());
+        String role = (String) roleComboBox.getSelectedItem();
         usernameField.setText(null);
         passwordField.setText(null);
 
-        if (newUsername.isEmpty() || newPassword.length == 0) {
-            JOptionPane.showMessageDialog(sign, "Username and password cannot be empty!", "Error",
-                    JOptionPane.ERROR_MESSAGE);
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(sign, "Username and password cannot be empty!", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        for (ArrayList<String> account : accounts) {
-            if (account.get(0).equals(newUsername)) {
-                JOptionPane.showMessageDialog(sign, "Username already exists!", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
+        if (accounts.containsKey(username)) {
+            JOptionPane.showMessageDialog(sign, "Username already exists!", "Error", JOptionPane.ERROR_MESSAGE);
+        } else {
+            accounts.put(username, new UserAccount(username, password, role));
+            JOptionPane.showMessageDialog(sign, "Account Created Successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
         }
+    }
 
-        accounts.add(new ArrayList<>());
-        accounts.get(accounts.size() - 1).add(newUsername);
-        accounts.get(accounts.size() - 1).add(new String(newPassword));
-        JOptionPane.showMessageDialog(sign, "Account Created Successfully!", "Success",
-                JOptionPane.INFORMATION_MESSAGE);
+    public static void main(String[] args) {
+        new Authentication();
+    }
+}
+
+class UserAccount {
+    private String username;
+    private String password;
+    private String role;
+
+    public UserAccount(String username, String password, String role) {
+        this.username = username;
+        this.password = password;
+        this.role = role;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getRole() {
+        return role;
     }
 }
