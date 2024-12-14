@@ -131,8 +131,6 @@ public class Authentication {
     }
 
     private void handleLogin(JTextField usernameField, JPasswordField passwordField) {
-        usernameField.setText(null);
-        passwordField.setText(null);
         if (usernameField.getText().isEmpty() || passwordField.getPassword().length == 0) {
             JOptionPane.showMessageDialog(sign, "Username and password cannot be empty!", "Error",
                     JOptionPane.ERROR_MESSAGE);
@@ -158,6 +156,9 @@ public class Authentication {
         if (!found) {
             JOptionPane.showMessageDialog(sign, "Invalid username or password!", "Error", JOptionPane.ERROR_MESSAGE);
         }
+
+        usernameField.setText(null);
+        passwordField.setText(null);
     }
 
     private void handleSignup(JTextField usernameField, JPasswordField passwordField) {
@@ -184,9 +185,5 @@ public class Authentication {
         accounts.get(accounts.size() - 1).add(new String(newPassword));
         JOptionPane.showMessageDialog(sign, "Account Created Successfully!", "Success",
                 JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Authentication());
     }
 }
