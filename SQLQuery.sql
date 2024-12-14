@@ -8,7 +8,8 @@ CREATE TABLE Doctor(
     last_name VARCHAR(50),
 	degree VARCHAR(50),
     years_of_exp TINYINT,
-    specialization VARCHAR(50) NOT NULL
+    specialization VARCHAR(50) NOT NULL,
+    CHECK (degree IN ('Bachelor', 'Master', 'Doctoral'))
 );
 
 CREATE TABLE Patient(
@@ -61,7 +62,7 @@ CREATE TABLE Appointment (
 );
 
 CREATE TABLE Clinic (
-  id INT PRIMARY KEY IDENTITY,
+  id INT PRIMARY KEY IDENTITY(1,1),
   name VARCHAR(50),
   floor INT,
   specialization VARCHAR(50) NOT NULL,
@@ -72,7 +73,7 @@ CREATE TABLE Clinic (
 );
 
 CREATE TABLE Operation_details (
-  id INT PRIMARY KEY IDENTITY,
+  id INT PRIMARY KEY IDENTITY(1,1),
   description VARCHAR(1000),
   date DATETIME,
   clinic_id INT NOT NULL,
@@ -106,7 +107,7 @@ CREATE TABLE Operation_help(
 );
 
 CREATE TABLE Room (
-  id INT PRIMARY KEY IDENTITY,
+  id INT PRIMARY KEY IDENTITY(1,1),
   floor INT,
   capacity INT,
   CHECK (floor BETWEEN 0 AND 10)
