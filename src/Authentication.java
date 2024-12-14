@@ -1,8 +1,10 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class Authentication {
     private static final Color HEADER_COLOR = new Color(30, 40, 50);
@@ -11,11 +13,9 @@ public class Authentication {
     private static final Font BUTTON_FONT = new Font("Arial", Font.PLAIN, 14);
     private static final Font HEADER_FONT = new Font("Arial", Font.BOLD, 13);
 
-    private Map<String, UserAccount> accounts;
     private JFrame sign;
 
     public Authentication() {
-        accounts = new HashMap<>();
         sign = new JFrame();
         sign.setSize(384, 288);
         sign.setLayout(null);
@@ -125,17 +125,27 @@ public class Authentication {
             return;
         }
 
-        UserAccount account = accounts.get(username);
-        if (account != null && account.getPassword().equals(password)) {
-            // Check if the role matches
-            if (account.getRole().equals(selectedRole)) {
-                sign.setVisible(false);
-                JOptionPane.showMessageDialog(sign, "Login successful as " + account.getRole(), "Success", JOptionPane.INFORMATION_MESSAGE);
+        try (Connection conn = new DatabaseConnection().connect()) {
+            String query = "SELECT * FROM UserAccounts WHERE username = ? AND password = ?";
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                String role = rs.getString("role");
+                if (role.equals(selectedRole)) {
+                    sign.setVisible(false);
+                    JOptionPane.showMessageDialog(sign, "Login successful as " + role, "Success", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(sign, "Role mismatch. You cannot log in as " + selectedRole, "Error", JOptionPane.ERROR_MESSAGE);
+                }
             } else {
-                JOptionPane.showMessageDialog(sign, "Role mismatch. You cannot log in as " + selectedRole, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(sign, "Invalid username or password!", "Error", JOptionPane.ERROR_MESSAGE);
             }
-        } else {
-            JOptionPane.showMessageDialog(sign, "Invalid username or password!", "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(sign, "Database connection failed!", "Error", JOptionPane.ERROR_MESSAGE);
         }
 
         usernameField.setText(null);
@@ -154,39 +164,32 @@ public class Authentication {
             return;
         }
 
-        if (accounts.containsKey(username)) {
-            JOptionPane.showMessageDialog(sign, "Username already exists!", "Error", JOptionPane.ERROR_MESSAGE);
-        } else {
-            accounts.put(username, new UserAccount(username, password, role));
+        try (Connection conn = new DatabaseConnection().connect()) {
+            String checkQuery = "SELECT COUNT(*) FROM UserAccounts WHERE username = ?";
+            PreparedStatement checkStmt = conn.prepareStatement(checkQuery);
+            checkStmt.setString(1, username);
+            ResultSet rs = checkStmt.executeQuery();
+            rs.next();
+            if (rs.getInt(1) > 0) {
+                JOptionPane.showMessageDialog(sign, "Username already exists!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String insertQuery = "INSERT INTO UserAccounts (username, password, role) VALUES (?, ?, ?)";
+            PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
+            insertStmt.setString(1, username);
+            insertStmt.setString(2, password);
+            insertStmt.setString(3, role);
+            insertStmt.executeUpdate();
+
             JOptionPane.showMessageDialog(sign, "Account Created Successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(sign, "Database connection failed!", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     public static void main(String[] args) {
         new Authentication();
-    }
-}
-
-class UserAccount {
-    private String username;
-    private String password;
-    private String role;
-
-    public UserAccount(String username, String password, String role) {
-        this.username = username;
-        this.password = password;
-        this.role = role;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getRole() {
-        return role;
     }
 }
