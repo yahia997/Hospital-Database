@@ -131,6 +131,12 @@ CREATE TABLE Take_care(
   FOREIGN KEY (room_id) REFERENCES Room(id) ON DELETE CASCADE,
 );
 
+CREATE TABLE UserAccounts (
+    username VARCHAR(50) PRIMARY KEY,
+    password VARCHAR(50) NOT NULL,
+    role VARCHAR(50) NOT NULL
+);
+
 
 -- we are enforced to use alter
 ALTER TABLE Doctor 
