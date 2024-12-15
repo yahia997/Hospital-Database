@@ -65,7 +65,7 @@ public class Authentication {
 
         JButton signupButton = createButton("Sign Up", BUTTON_FONT, Color.WHITE, SIGNUP_BUTTON_COLOR);
         signupButton.setBounds(195, 210, 83, 27);
-        signupButton.addActionListener(e -> handleSignup(usernameField, passwordField, roleComboBox));
+        signupButton.addActionListener(e -> signupWindow());
         center.add(signupButton);
 
         center.add(usernameLabel);
@@ -152,44 +152,8 @@ public class Authentication {
         passwordField.setText(null);
     }
 
-    private void handleSignup(JTextField usernameField, JPasswordField passwordField, JComboBox<String> roleComboBox) {
-        String username = usernameField.getText();
-        String password = new String(passwordField.getPassword());
-        String role = (String) roleComboBox.getSelectedItem();
-        usernameField.setText(null);
-        passwordField.setText(null);
-
-        if (username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(sign, "Username and password cannot be empty!", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        try (Connection conn = new DatabaseConnection().connect()) {
-            String checkQuery = "SELECT COUNT(*) FROM UserAccounts WHERE username = ?";
-            PreparedStatement checkStmt = conn.prepareStatement(checkQuery);
-            checkStmt.setString(1, username);
-            ResultSet rs = checkStmt.executeQuery();
-            rs.next();
-            if (rs.getInt(1) > 0) {
-                JOptionPane.showMessageDialog(sign, "Username already exists!", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            String insertQuery = "INSERT INTO UserAccounts (username, password, role) VALUES (?, ?, ?)";
-            PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
-            insertStmt.setString(1, username);
-            insertStmt.setString(2, password);
-            insertStmt.setString(3, role);
-            insertStmt.executeUpdate();
-
-            JOptionPane.showMessageDialog(sign, "Account Created Successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(sign, "Database connection failed!", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    public static void main(String[] args) {
-        new Authentication();
+    private void signupWindow() {
+        sign.setVisible(false);
+        new SignupWindow();
     }
 }
