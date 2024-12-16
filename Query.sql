@@ -22,7 +22,7 @@ CREATE TABLE Patient(
     country VARCHAR(50),
     street_number INT,
     building_number INT,
-    email VARCHAR(100) UNIQUE,
+    email VARCHAR(100) UNIQUE NOT NULL,
     CHECK (gender IN ('Male', 'Female'))
 );
 
@@ -46,7 +46,7 @@ CREATE TABLE Patient_Phone(
 CREATE TABLE Specialization(
 	name VARCHAR(50) PRIMARY KEY,
   	start_date DATE,
-  	manager_id BIGINT NOT NULL,
+  	manager_id BIGINT,
   	FOREIGN KEY (manager_id) REFERENCES Doctor(id)
 );
 
@@ -109,7 +109,7 @@ CREATE TABLE Operation_help(
 CREATE TABLE Room (
   id INT PRIMARY KEY IDENTITY(1,1),
   floor INT,
-  capacity INT,
+  capacity INT DEFAULT 0,
   CHECK (floor BETWEEN 0 AND 10)
 );
 
@@ -129,12 +129,6 @@ CREATE TABLE Take_care(
   PRIMARY KEY (nurse_id, room_id),
   FOREIGN KEY (nurse_id) REFERENCES Nurse(id) ON DELETE CASCADE,
   FOREIGN KEY (room_id) REFERENCES Room(id) ON DELETE CASCADE,
-);
-
-CREATE TABLE UserAccounts (
-    username VARCHAR(50) PRIMARY KEY,
-    password VARCHAR(50) NOT NULL,
-    role VARCHAR(50) NOT NULL
 );
 
 
@@ -188,7 +182,7 @@ BEGIN
         LEFT JOIN Patient_stay ps
           ON ps.room_id = r.id AND ps.leave IS NULL -- Count only active stays
         WHERE r.capacity <= (
-            SELECT COUNT(*)
+            SELECT COUNT(*)-1
             FROM Patient_stay ps_active
             WHERE ps_active.room_id = r.id AND ps_active.leave IS NULL
         )
